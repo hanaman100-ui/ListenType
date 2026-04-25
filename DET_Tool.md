@@ -15,6 +15,7 @@ Duolingo English Test(DET) 준비를 위한 자체 제작 웹 툴 모음.
 | **RandomWord** | `D:\MyProject\RandomWord` | AWL 영단어 퀴즈 (adaptive level) | Flask 웹앱 | [저장소](https://github.com/hanaman100-ui/RandomWord) | [Render](https://randomword-a5ma.onrender.com/) |
 | **FillBlank** | `D:\MyProject\FillBlank` | 빈칸 채우기 문장 연습 | HTML 단일파일 ← 현재 | [hanaman100-ui/FillBlank](https://github.com/hanaman100-ui/FillBlank) | https://hanaman100-ui.github.io/FillBlank |
 | **ReadComplete** | `D:\MyProject\ReadComplete` | DET Read & Complete — 단어 빈칸 채우기 (100개 지문, 문제당 3분, 2문제씩) | HTML 단일파일 | [hanaman100-ui/ReadComplete](https://github.com/hanaman100-ui/ReadComplete) | https://hanaman100-ui.github.io/ReadComplete |
+| **ListenType** | `D:\MyProject\ListenType` | DET Listen & Type — 음성 듣고 타이핑 (300문장 DB, adaptive 난이도, 문제당 60초) | HTML 단일파일 | [hanaman100-ui/ListenType](https://github.com/hanaman100-ui/ListenType) | https://hanaman100-ui.github.io/ListenType |
 
 ---
 
