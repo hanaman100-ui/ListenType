@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#3B82F6" />
+  <title>DET Listen & Type</title>
+  <style>
+    :root {
+      --blue:   #3B82F6;
+      --blue-d: #2563EB;
+      --orange: #F59E0B;
+      --red:    #EF4444;
+      --green:  #10B981;
+      --text:   #111827;
+      --dim:    #9CA3AF;
+      --border: #E5E7EB;
+      --panel:  #F9FAFB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .screen.hidden { display: none; }
+
+    @media (min-width: 520px) {
+      .screen {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left:  1px solid var(--border);
+        border-right: 1px solid var(--border);
+      }
+    }
+
+    /* ── HOME ─────────────────────────────────────────────── */
+    #home {
+      overflow-y: auto;
+      justify-content: flex-start;
+      text-align: center;
+      padding: 40px 28px 36px;
+      gap: 12px;
+    }
+    #home h1 { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+    .sub  { color: var(--dim); font-size: 14px; }
+    .divider { width: 100%; height: 1px; background: var(--border); margin: 2px 0; }
+
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #EFF6FF;
+      color: var(--blue);
+      border: 1.5px solid #BFDBFE;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 14px;
+    }
+
+    .desc {
+      color: #374151;
+      font-size: 15px;
+      line-height: 1.75;
+      text-align: left;
+    }
+    .desc strong { color: var(--blue); }
+
+    .info-grid {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    .info-chip {
+      flex: 1;
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .info-chip .ic-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      display: block;
+    }
+    .info-chip .ic-label {
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .strategy-box {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.85;
+      text-align: left;
+      width: 100%;
+    }
+    .strategy-box .sb-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .strategy-box ul { padding-left: 16px; }
+    .strategy-box ul li { margin-bottom: 4px; }
+    .strategy-box ul li:last-child { margin-bottom: 0; }
+
+    .mistake-box {
+      background: #FFF7ED;
+      border: 1.5px solid #FED7AA;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #92400E;
+      line-height: 1.85;
+      text-align: left;
+      width: 100%;
+    }
+    .mistake-box .mb-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #D97706;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .mistake-box ul { padding-left: 16px; }
+    .mistake-box ul li { margin-bottom: 4px; }
+    .mistake-box ul li:last-child { margin-bottom: 0; }
+
+    .btn-start {
+      width: 100%;
+      height: 54px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    .btn-start:active { background: var(--blue-d); }
+
+    /* ── SHARED TIMER ─────────────────────────────────────── */
+    .timer-area {
+      width: 100%;
+      padding: 20px 24px 0;
+      flex-shrink: 0;
+    }
+    .timer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .big-timer {
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      color: var(--text);
+      transition: color 0.3s;
+    }
+    .big-timer.urgent { color: var(--red); }
+    .q-counter {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dim);
+    }
+    .prog-wrap {
+      width: 100%;
+      height: 5px;
+      background: var(--border);
+      margin-top: 12px;
+      flex-shrink: 0;
+    }
+    .prog-bar {
+      height: 100%;
+      background: var(--orange);
+      transition: width 0.9s linear, background 0.3s;
+    }
+
+    /* ── QUIZ ─────────────────────────────────────────────── */
+    #quiz { justify-content: flex-start; }
+
+    .quiz-body {
+      flex: 1;
+      width: 100%;
+      padding: 20px 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* 스피커 + 입력창 레이아웃 */
+    .listen-area {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .speaker-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, transform 0.1s;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.35);
+    }
+    .speaker-btn:active { transform: scale(0.95); }
+    .speaker-btn.playing { background: #1D4ED8; animation: pulse 1.2s ease-in-out infinite; }
+    .speaker-btn.disabled { background: var(--dim); cursor: default; box-shadow: none; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
+      50%       { box-shadow: 0 4px 20px rgba(59,130,246,0.7); }
+    }
+
+    .speaker-icon {
+      width: 32px;
+      height: 32px;
+      fill: #fff;
+    }
+
+    .input-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .response-input {
+      width: 100%;
+      min-height: 100px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      color: var(--text);
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      line-height: 1.6;
+      -webkit-appearance: none;
+    }
+    .response-input:focus { border-color: var(--blue); background: #EFF6FF; }
+    .response-input::placeholder { color: var(--dim); }
+
+    .replay-info {
+      font-size: 13px;
+      color: var(--dim);
+    }
+    .replay-info span { font-weight: 600; color: #374151; }
+
+    .hint-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--blue);
+      text-align: center;
+    }
+
+    /* 지시문 카드 */
+    .instruction-card {
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .quiz-footer {
+      width: 100%;
+      padding: 12px 24px 28px;
+      flex-shrink: 0;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      height: 48px;
+      background: var(--panel);
+      color: #374151;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-secondary:active { background: #F3F4F6; }
+
+    /* 난이도 뱃지 */
+    .diff-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .diff-easy   { background: #D1FAE5; color: #065F46; }
+    .diff-medium { background: #FEF3C7; color: #92400E; }
+    .diff-hard   { background: #FEE2E2; color: #991B1B; }
+
+    /* ── REVIEW ───────────────────────────────────────────── */
+    #review { justify-content: flex-start; }
+
+    .review-header {
+      width: 100%;
+      padding: 28px 24px 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .review-title { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+    .review-pct   { font-size: 44px; font-weight: 800; color: var(--blue); letter-spacing: -1px; }
+    .review-score { font-size: 15px; color: var(--dim); margin-top: 4px; }
+
+    .review-list {
+      flex: 1;
+      width: 100%;
+      overflow-y: auto;
+      padding: 8px 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .rv-item {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .rv-item.rv-ok  { border-color: #6EE7B7; background: #F0FDF4; }
+    .rv-item.rv-bad { border-color: #FCA5A5; background: #FFF5F5; }
+
+    .rv-meta {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .rv-correct-label {
+      font-size: 12px;
+      color: #065F46;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .rv-answer-label {
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 2px;
+    }
+    .rv-sentence-correct {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+    .rv-diff {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .rv-diff .word-ok    { color: var(--text); }
+    .rv-diff .word-miss  { color: var(--red); font-weight: 700; text-decoration: line-through; }
+    .rv-diff .word-extra { color: var(--orange); font-weight: 700; }
+
+    .review-footer {
+      width: 100%;
+      padding: 12px 20px 28px;
+      flex-shrink: 0;
+    }
+    .btn-row { display: flex; gap: 10px; width: 100%; }
+
+    /* ── 모바일 최적화 ─────────────────────────────────────── */
+    @media (max-width: 520px) {
+      .big-timer  { font-size: 36px; }
+      .timer-area { padding: 10px 16px 0; }
+      .quiz-body  { padding: 14px 16px 0; }
+      .quiz-footer { padding: 8px 16px 20px; }
+      .speaker-btn { width: 60px; height: 60px; }
+      .speaker-icon { width: 26px; height: 26px; }
+      .response-input { font-size: 15px; }
+    }
+
+    @media (max-height: 500px) {
+      .timer-area  { padding: 4px 16px 0; }
+      .big-timer   { font-size: 24px; letter-spacing: -1px; }
+      .q-counter   { font-size: 13px; }
+      .prog-wrap   { height: 3px; margin-top: 4px; }
+      .quiz-body   { padding: 8px 16px 0; gap: 10px; }
+      .quiz-footer { padding: 4px 16px 10px; }
+      .speaker-btn { width: 52px; height: 52px; }
+    }
+
+    -webkit-tap-highlight-color: transparent;
+  </style>
+</head>
+<body>
+
+<!-- ── HOME ───────────────────────────────────────────────────── -->
+<div id="home" class="screen">
+  <p style="font-size:1.05rem; font-weight:700; color:#7C3AED; text-align:center; margin-bottom:4px;">예은아, DET 합격의 그날까지! 🎧</p>
+  <h1>Listen &amp; Type</h1>
+  <p class="sub">Duolingo English Test · Conversation · Comprehension</p>
+
+  <div class="divider"></div>
+
+  <span class="type-badge">🎧 유형 5 — Listen and Type</span>
+
+  <p class="desc">
+    음성을 듣고 들린 문장을 <strong>그대로 타이핑</strong>하세요.<br>
+    대소문자는 구별하지 않으나 철자·관사·시제는 채점합니다.
+  </p>
+
+  <div class="info-grid">
+    <div class="info-chip">
+      <span class="ic-val">60초</span>
+      <span class="ic-label">문제당 시간</span>
+    </div>
+    <div class="info-chip">
+      <span class="ic-val">5문제</span>
+      <span class="ic-label">adaptive 출제</span>
+    </div>
+    <div class="info-chip">
+      <span class="ic-val">최대 3회</span>
+      <span class="ic-label">재생 가능</span>
+    </div>
+  </div>
+
+  <div class="strategy-box">
+    <div class="sb-title">💡 핵심 전략</div>
+    <ul>
+      <li>첫 음성 나오자마자 바로 타이핑 시작 (지체 금지)</li>
+      <li>추천 타임라인: 60초→1회 청취 / 40초→2회 / 20초→3회 / 10초→문법 체크</li>
+      <li>연음 현상 ("have it"→[해빗]) / 유화 현상 ("go to"→[고우루우]) 주의</li>
+    </ul>
+  </div>
+
+  <div class="mistake-box">
+    <div class="mb-title">⚠️ 흔한 실수</div>
+    <ul>
+      <li>관사(a/the), 전치사 누락</li>
+      <li>복수형(-s), 시제(-ed, -ing) 놓치기</li>
+    </ul>
+  </div>
+
+  <button class="btn-start" onclick="startQuiz()">시  작</button>
+</div>
+
+<!-- ── QUIZ ───────────────────────────────────────────────────── -->
+<div id="quiz" class="screen hidden">
+  <div class="timer-area">
+    <div class="timer-row">
+      <div class="big-timer" id="q-timer">1:00</div>
+      <div class="q-counter"  id="q-counter">1 / 5</div>
+    </div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-bar" id="q-bar" style="width:100%"></div>
+  </div>
+
+  <div class="quiz-body">
+    <div class="instruction-card">Type the statement that you hear.</div>
+
+    <div class="listen-area">
+      <button class="speaker-btn" id="speaker-btn" onclick="playAudio()">
+        <svg class="speaker-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+      </button>
+
+      <div class="input-area">
+        <textarea
+          class="response-input"
+          id="response-input"
+          placeholder="Your response"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        ></textarea>
+        <div class="replay-info">Number of replays left: <span id="replay-count">2</span></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <span class="diff-badge diff-medium" id="diff-badge">MEDIUM</span>
+    </div>
+  </div>
+
+  <div class="quiz-footer">
+    <button class="btn-secondary" onclick="cancelToHome()">취소</button>
+    <button class="btn-start" id="btn-next" onclick="goNext()" style="flex:2">NEXT →</button>
+  </div>
+</div>
+
+<!-- ── REVIEW ─────────────────────────────────────────────────── -->
+<div id="review" class="screen hidden">
+  <div class="review-header">
+    <div class="review-title" id="rv-emoji">🎉 결과</div>
+    <div class="review-pct"   id="rv-pct">0%</div>
+    <div class="review-score" id="rv-score">0 / 0</div>
+  </div>
+  <div class="divider" style="width:calc(100% - 32px); margin: 0 16px;"></div>
+  <div class="review-list" id="rv-list"></div>
+  <div class="review-footer">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="show('home')">홈으로</button>
+      <button class="btn-secondary" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   DB  (난이도별: easy / medium / hard)
+   - easy:   단문, 기본 문법
+   - medium: 중간 길이, 시제·관사 주의
+   - hard:   복잡한 구조, 연음·축약형 포함
+════════════════════════════════════════════════ */
+const DB = {
+  easy: [
+    "She is reading a book.",
+    "The cat sat on the mat.",
+    "He walks to school every day.",
+    "We had lunch at noon.",
+    "They played soccer in the park.",
+    "I need to buy some milk.",
+    "The bus arrives at eight.",
+    "She called her mother last night.",
+    "He drinks coffee in the morning.",
+    "The students finished their homework.",
+    "It was a sunny afternoon.",
+    "She put the keys on the table.",
+    "He forgot to close the window.",
+    "We met at the library yesterday.",
+    "The children are playing outside.",
+    "I like to swim in the summer.",
+    "The store opens at nine.",
+    "She wore a blue dress to the party.",
+    "He always arrives on time.",
+    "They decided to take a walk.",
+    "The baby is sleeping in the crib.",
+    "She sent an email to her teacher.",
+    "He fixed the broken chair.",
+    "We visited our grandparents last weekend.",
+    "The train was delayed by twenty minutes.",
+    "She made a salad for dinner.",
+    "He reads the newspaper every morning.",
+    "They live in a small apartment.",
+    "The dog barked at the stranger.",
+    "I forgot my umbrella at home.",
+    "She turned off the lights before leaving.",
+    "He asked for directions to the station.",
+    "The weather was cold and windy.",
+    "She packed her bag the night before.",
+    "They ordered pizza for dinner.",
+    "He returned the book to the library.",
+    "She lost her wallet on the subway.",
+    "The meeting starts at two o'clock.",
+    "He cleaned the kitchen after dinner.",
+    "We saw a film at the cinema.",
+    "She took the stairs instead of the elevator.",
+    "He brought flowers for his wife.",
+    "The park was full of people.",
+    "She wrote a letter to her friend.",
+    "He turned on the heater.",
+    "They arrived at the airport early.",
+    "The supermarket was closed on Sunday.",
+    "She remembered to call the doctor.",
+    "He left a message on the answering machine.",
+    "We enjoyed the concert last night.",
+    "She locked the door before going to bed.",
+    "He borrowed a pen from his classmate.",
+    "The library closes at eight on weekdays.",
+    "She watered the plants in the garden.",
+    "He missed the last train home.",
+    "They painted the walls a light blue color.",
+    "She forgot to set her alarm clock.",
+    "He carried the groceries upstairs.",
+    "The children drew pictures in art class.",
+    "She switched off the television and went to bed.",
+    "He refilled his water bottle before the meeting.",
+    "They woke up early to watch the sunrise.",
+    "The postman delivered a package this morning.",
+    "She spilled coffee on her white shirt.",
+    "He apologized for the mistake right away.",
+    "They saved enough money to buy a new sofa.",
+    "She printed the document and signed it.",
+    "He fed the cat before leaving the house.",
+    "The bakery sold out of bread by noon.",
+    "She thanked the driver and got off the bus.",
+    "He kept the receipt in case he needed to return it.",
+    "They decided to eat outside because the weather was nice.",
+    "She took a shortcut through the park.",
+    "He noticed a crack in the ceiling.",
+    "The students lined up before entering the classroom.",
+    "She replied to the email within a few minutes.",
+    "He stretched before going for a run.",
+    "They shared the bill at the end of the meal.",
+    "She picked up her daughter from school.",
+    "He lowered the volume on the television.",
+    "The flight landed thirty minutes early.",
+    "She checked her messages before getting out of bed.",
+    "He arranged the books on the shelf by size.",
+    "They cancelled their plans due to the heavy rain.",
+    "She ironed her clothes the night before the interview.",
+    "He rinsed the dishes and left them to dry.",
+    "The puppy followed him everywhere around the house.",
+    "She adjusted the mirror before driving.",
+    "He wrapped the birthday present in colorful paper.",
+    "They listened carefully to the tour guide.",
+    "She placed the hot pan on the counter.",
+    "He double-checked his answer before submitting the form.",
+    "The neighbors moved out over the weekend.",
+    "She hung her coat on the hook by the door.",
+    "He gave his seat to an elderly woman.",
+    "They finished painting the fence by evening.",
+    "She asked the waiter for the bill.",
+    "He unpacked his suitcase as soon as he arrived.",
+  ],
+
+  medium: [
+    "She has been waiting for the bus for over an hour.",
+    "He didn't realize that the meeting had already started.",
+    "They decided to move to a bigger apartment next month.",
+    "The teacher asked the students to submit their essays by Friday.",
+    "I would have called you, but my phone ran out of battery.",
+    "She told him that she was not interested in the job.",
+    "The museum is closed on Mondays and public holidays.",
+    "He promised to finish the report before the deadline.",
+    "We should have left earlier to avoid the traffic.",
+    "The company is planning to launch a new product next year.",
+    "She was surprised to see him at the conference.",
+    "He has lived in this city for more than ten years.",
+    "They are considering switching to a different service provider.",
+    "The construction project is expected to be completed by summer.",
+    "She realized she had left her passport at home.",
+    "He suggested that we take a different route to avoid the jam.",
+    "The children were excited about the upcoming school trip.",
+    "She has not heard from him since last Tuesday.",
+    "They agreed to meet at the coffee shop at three.",
+    "The restaurant is famous for its fresh seafood dishes.",
+    "He apologized for being late to the interview.",
+    "She was relieved to hear that the test results were negative.",
+    "The landlord asked them to renew the lease by the end of the month.",
+    "He has been studying English for about two years.",
+    "They found it difficult to adapt to the new working environment.",
+    "She told the doctor that she had been feeling tired lately.",
+    "The project manager reminded everyone about the upcoming deadline.",
+    "He was not sure whether he would be able to attend the event.",
+    "She has been taking online courses to improve her skills.",
+    "The city has introduced new measures to reduce air pollution.",
+    "He mentioned that the package had not arrived yet.",
+    "She decided to apply for the position after reading the job description.",
+    "They were disappointed that the concert had been cancelled.",
+    "The airline announced a delay of approximately two hours.",
+    "She remembered to book the hotel room in advance.",
+    "He was asked to present his findings at the next board meeting.",
+    "The new policy requires all employees to complete a training course.",
+    "She has always wanted to travel to South America.",
+    "They ran out of time before they could finish the presentation.",
+    "He noticed that the screen on his phone was cracked.",
+    "She was not expecting to receive such positive feedback.",
+    "The government has announced plans to build new schools.",
+    "He suggested trying the new Italian restaurant downtown.",
+    "She spent the entire weekend revising for her exams.",
+    "They were impressed by the quality of the customer service.",
+    "He forgot to mention that the event had been rescheduled.",
+    "The students were encouraged to ask questions during the lecture.",
+    "She has been working overtime for the past three weeks.",
+    "He was relieved to find out that the problem had been resolved.",
+    "They decided to postpone the meeting until next week.",
+    "The committee reviewed several proposals before making a decision.",
+    "She was happy to hear that her application had been accepted.",
+    "He tends to work better in the mornings than in the afternoons.",
+    "They moved into their new house at the beginning of the year.",
+    "The report highlighted several areas that needed improvement.",
+    "She was unsure about which option would be more suitable.",
+    "He explained that the delay was due to an unexpected technical issue.",
+    "They are looking for a candidate with strong communication skills.",
+    "She was glad that the presentation went smoothly.",
+    "The team worked together to find a solution to the problem.",
+    "He said he would get back to them as soon as possible.",
+    "She noticed that the price had increased significantly.",
+    "They are planning to expand their business into new markets.",
+    "He was recommended by a colleague who had worked with him before.",
+    "The event attracted more visitors than they had expected.",
+    "She discovered that the deadline had been moved forward.",
+    "He told his manager that he needed more time to complete the task.",
+    "They have decided to invest in renewable energy sources.",
+    "The university is offering scholarships to international students.",
+    "She was given the opportunity to lead the project.",
+    "He realized that he had misunderstood the instructions.",
+    "They found it hard to reach a consensus on the issue.",
+    "The doctor advised her to rest for at least a week.",
+    "She was asked to translate the document into Korean.",
+    "He has been trying to improve his time management skills.",
+    "They received a letter confirming their reservation.",
+    "The director thanked everyone for their hard work and dedication.",
+    "She was told that her parcel would arrive within three to five working days.",
+    "He was not aware that the policy had changed until he read the announcement.",
+    "They managed to complete the project on time despite the unexpected delays.",
+    "She asked her colleague to cover her shift while she was on leave.",
+    "The bank informed him that his account had been temporarily suspended.",
+    "He realized halfway through the presentation that he had skipped a slide.",
+    "She took notes during the meeting so she would not forget anything important.",
+    "The neighbors complained about the noise coming from the apartment upstairs.",
+    "He was relieved to find out that his visa application had been approved.",
+    "She mentioned that she had been feeling a bit under the weather recently.",
+    "They had to reschedule their holiday because of a problem with the booking.",
+    "He spent most of the afternoon trying to fix the issue with his laptop.",
+    "The recruiter asked her to send a copy of her latest resume by the end of the day.",
+    "She was impressed by how quickly the technician identified and resolved the problem.",
+    "He acknowledged that he should have double-checked the figures before submitting the report.",
+    "They were not sure whether the venue would be large enough to accommodate all the guests.",
+    "She has been commuting by train since the company moved to the new office.",
+    "He was advised to keep his receipts in case he needed to claim the expenses later.",
+    "The organization decided to restructure its operations to improve overall efficiency.",
+    "She was asked to give a brief overview of the project at the start of the meeting.",
+    "He applied for a transfer to the overseas branch and was accepted within a week.",
+    "They noticed that the air conditioning in the conference room was not working properly.",
+    "She assured her manager that she would have the report ready by the following morning.",
+  ],
+
+  hard: [
+    "I would have gone to the party if I had known about it.",
+    "The report that was submitted by the committee has not yet been reviewed by the board.",
+    "You've got to be kidding me — there's no way he could have finished it that quickly.",
+    "Despite the significant advancements in technology, many communities still lack access to reliable internet.",
+    "She was informed that the deadline had been extended, but the new date had not yet been confirmed.",
+    "The research suggests that early intervention can have a lasting impact on children's cognitive development.",
+    "He would have applied for the grant had he been aware of the eligibility requirements.",
+    "The proposal was rejected on the grounds that it failed to meet the required environmental standards.",
+    "Although the results were largely positive, there were several inconsistencies that the researchers could not account for.",
+    "The legislation, which was passed earlier this year, is expected to take effect from the beginning of next month.",
+    "It has been argued that the current approach to urban planning fails to adequately address the needs of low-income residents.",
+    "She was surprised to learn that the position had already been filled before the application deadline.",
+    "The findings of the study challenge the widely held assumption that economic growth always leads to improved well-being.",
+    "Had the team communicated more effectively, the misunderstanding could easily have been avoided.",
+    "The commission concluded that additional funding would be required to implement the proposed reforms.",
+    "Despite repeated warnings, the company continued to operate without the necessary safety certifications.",
+    "The decision to relocate the headquarters was made after months of deliberation among senior management.",
+    "She acknowledged that the project had taken longer than anticipated, but insisted that the quality of the work was not compromised.",
+    "The survey revealed that a majority of respondents were dissatisfied with the level of public services available in their area.",
+    "It is widely recognized that investing in education yields significant long-term economic and social benefits.",
+    "The new regulations require companies to disclose detailed information about their environmental impact on an annual basis.",
+    "He pointed out that the assumptions underlying the model were based on outdated data and therefore unreliable.",
+    "The committee was unable to reach a unanimous decision and agreed to revisit the matter at its next meeting.",
+    "The rapid expansion of e-commerce has fundamentally changed the way consumers interact with businesses.",
+    "She argued that the proposed policy would disproportionately affect those on lower incomes.",
+    "The architect explained that the design incorporated sustainable materials to minimize the building's carbon footprint.",
+    "Despite having little experience in the field, she managed to secure a highly competitive research position.",
+    "The government has pledged to reduce carbon emissions by at least forty percent over the next decade.",
+    "He was concerned that the new system would not be compatible with the existing infrastructure.",
+    "The board voted unanimously to approve the merger, subject to regulatory clearance.",
+    "She emphasized that collaboration between different departments was essential to the project's success.",
+    "The study found no significant correlation between the two variables after controlling for external factors.",
+    "It remains unclear whether the proposed changes will achieve their intended objectives within the given timeframe.",
+    "The international community has been urged to take immediate and coordinated action to address the crisis.",
+    "He expressed concern that the budget cuts would undermine the long-term sustainability of the program.",
+    "The professor argued that the traditional curriculum needed to be reformed to reflect the demands of a changing economy.",
+    "Despite the challenges posed by the pandemic, the organization managed to maintain its operations throughout the year.",
+    "She was informed that her application had been shortlisted, and she would be contacted within the next few days.",
+    "The analysis revealed that the majority of the errors were the result of human oversight rather than technical failure.",
+    "He maintained that the evidence presented was insufficient to support the conclusions drawn in the report.",
+    "The charity has been working to raise awareness about the impact of poverty on children's educational outcomes.",
+    "The tribunal determined that the company had breached its contractual obligations and ordered it to pay compensation.",
+    "She conceded that while the plan had its merits, there were significant risks that had not been adequately addressed.",
+    "The latest figures suggest that unemployment has fallen to its lowest level in more than a decade.",
+    "He was adamant that the organization's priorities needed to be reassessed in light of the changing circumstances.",
+    "The review highlighted a number of areas where improvements could be made to enhance efficiency and reduce costs.",
+    "She acknowledged the complexity of the issue but insisted that decisive action could no longer be delayed.",
+    "The data indicates that regions with higher levels of investment in public health tend to have better overall outcomes.",
+    "He was of the view that the proposed solution, while innovative, was not yet ready for large-scale implementation.",
+    "The expert panel concluded that further research was necessary before any firm recommendations could be made.",
+    "While the initial findings appeared promising, subsequent testing revealed a number of significant methodological flaws.",
+    "The minister was pressed to explain why the funds had been allocated without prior parliamentary approval.",
+    "She contended that the existing framework was no longer adequate given the scale of the changes taking place in the industry.",
+    "The report cautioned that without substantial reforms, the system would be unable to cope with growing demand over the next two decades.",
+    "He was unable to account for the discrepancy between the figures presented in the two separate audits.",
+    "The panel noted that several key stakeholders had not been consulted during the initial phase of the policy development process.",
+    "Despite the considerable opposition from local residents, the planning committee voted in favor of the proposed development.",
+    "She pointed out that the assumptions underlying the projection were overly optimistic and did not reflect current market conditions.",
+    "The agency warned that the continued use of the substance posed an unacceptable risk to both human health and the environment.",
+    "He argued that the so-called reforms amounted to nothing more than a superficial restructuring of a fundamentally broken system.",
+    "The board acknowledged that the decision had been poorly communicated and committed to improving transparency going forward.",
+    "She was of the opinion that the benefits of the new approach far outweighed the short-term disruption it would inevitably cause.",
+    "The investigation found that the incident had been caused by a combination of equipment failure and inadequate staff training.",
+    "Despite the ambitious targets set out in the original plan, progress had been slower than anticipated at nearly every stage.",
+    "He noted that the proposed timeline was unrealistic given the complexity of the regulatory approval process involved.",
+    "The study concluded that socioeconomic background remained one of the most significant predictors of educational attainment.",
+    "She acknowledged that the organization had fallen short of its commitments but insisted that meaningful progress had been made.",
+    "The delegation was unable to reach an agreement on the draft text and agreed to resume negotiations the following week.",
+    "He stressed that the long-term consequences of inaction would be far more costly than the investment required to address the problem now.",
+    "The report recommended that a dedicated task force be established to oversee the implementation of the proposed measures.",
+    "She emphasized that the findings should not be interpreted in isolation but rather in the broader context of ongoing research in the field.",
+    "The court ruled that the evidence presented by the prosecution had been obtained in violation of the defendant's constitutional rights.",
+    "He was of the view that the committee had acted prematurely in reaching its conclusions without fully examining the available evidence.",
+    "The analysis indicated that the most significant gains had been achieved in regions where community-based interventions had been most consistently applied.",
+    "She maintained that the proposed merger, if approved, would reduce competition and ultimately harm consumers through higher prices.",
+    "The authorities confirmed that an investigation had been launched and that a full report would be published within the next sixty days.",
+    "Despite assurances to the contrary, the implementation of the new system had been accompanied by a series of avoidable technical failures.",
+    "He conceded that the original estimate had been overly conservative and that the actual cost of the project had exceeded expectations considerably.",
+    "The committee expressed serious reservations about the methodology used in the study and called for an independent review of the findings.",
+    "She was adamant that the proposed cuts would have a disproportionate impact on the most vulnerable members of the community.",
+    "The organization acknowledged that its earlier response to the crisis had been inadequate and outlined the steps it was taking to address the situation.",
+    "He observed that the discrepancy between stated policy and actual practice had eroded public trust in the institution over time.",
+    "The review board determined that the original decision had not been made in accordance with the proper procedures and ordered a full reassessment.",
+    "She argued that the technological solution being proposed was fundamentally at odds with the social and ethical values the organization claimed to uphold.",
+    "The findings highlighted the urgent need for a coordinated international response to address what had become a deeply interconnected global challenge.",
+    "He was concerned that the rapid pace of regulatory change was making it increasingly difficult for smaller businesses to remain compliant.",
+    "The committee was informed that the shortfall in funding would require a fundamental reassessment of the scope and timeline of the project.",
+    "She observed that while the initiative had achieved some of its stated goals, it had also generated a number of unintended and adverse consequences.",
+    "The task force concluded that existing mechanisms were insufficient to prevent the recurrence of similar failures in the future.",
+    "He was of the opinion that the proposed solution, though technically sound, failed to adequately address the underlying structural causes of the problem.",
+    "The university announced that it would be introducing stricter academic integrity policies following a significant rise in plagiarism cases.",
+    "She acknowledged that the data was limited but argued that it was nonetheless sufficient to draw some preliminary conclusions.",
+    "The commission recommended that all future infrastructure projects be subject to a mandatory independent environmental impact assessment.",
+    "He maintained that the lack of transparency in the decision-making process had made it impossible to hold those responsible to account.",
+    "The review found that the long-standing inequalities in the distribution of public resources had been exacerbated rather than reduced over the period in question.",
+    "She suggested that a more nuanced approach was needed — one that took into account the significant variation in conditions across different regions.",
+    "The director conceded that the rollout had not gone as planned but expressed confidence that the remaining issues would be resolved promptly.",
+    "He stressed that any solution adopted at the national level would need to be both flexible enough to accommodate local differences and robust enough to ensure consistency.",
+    "The tribunal upheld the appeal, ruling that the original decision had been based on an erroneous interpretation of the applicable legislation.",
+  ]
+};
+
+/* ════════════════════════════════════════════
+   ADAPTIVE STATE
+════════════════════════════════════════════ */
+const TOTAL_Q    = 5;
+const TIMER_SEC  = 60;
+const MAX_REPLAY = 2; // 초기 재생 후 최대 2회 추가 재생
+
+let sessionSentences = [];   // [{text, difficulty}]
+let sessionAnswers   = [];   // [{userText, correct, score}]
+let curQ             = 0;
+let currentDiff      = 'medium';
+let timerID          = null;
+let timerSec         = TIMER_SEC;
+let replayLeft       = MAX_REPLAY;
+let voices           = [];
+let currentUtterance = null;
+let isPlaying        = false;
+
+/* TTS 음성 로드 */
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+/* ════════════════════════════════════════════
+   UTIL
+════════════════════════════════════════════ */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* 문장 선택 (adaptive) */
+function pickSentence(diff) {
+  const pool = shuffle(DB[diff]);
+  // 이미 출제된 문장은 피함
+  const used = new Set(sessionSentences.map(s => s.text));
+  for (const t of pool) {
+    if (!used.has(t)) return { text: t, difficulty: diff };
+  }
+  // fallback: 겹쳐도 그냥 반환
+  return { text: pool[0], difficulty: diff };
+}
+
+/* 점수 계산: 단어 단위 비교 (대소문자 무시, 구두점 제거) */
+function scoreAnswer(correct, userInput) {
+  const normalize = s => s.toLowerCase().replace(/[^a-z0-9\s']/g, '').trim();
+  const cWords = normalize(correct).split(/\s+/);
+  const uWords = normalize(userInput).split(/\s+/);
+
+  // 틀린 단어 위치 찾기 (단순 순서 비교)
+  let correctCount = 0;
+  const maxLen = Math.max(cWords.length, uWords.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (cWords[i] && uWords[i] && cWords[i] === uWords[i]) correctCount++;
+  }
+  return Math.round((correctCount / cWords.length) * 100);
+}
+
+/* 다음 난이도 결정 */
+function nextDiff(score, current) {
+  if (score >= 80) {
+    return current === 'easy' ? 'medium' : 'hard';
+  } else if (score <= 40) {
+    return current === 'hard' ? 'medium' : 'easy';
+  }
+  return current;
+}
+
+/* ════════════════════════════════════════════
+   TTS
+════════════════════════════════════════════ */
+function getEnglishVoice() {
+  // Edge/Chrome Neural 음성 우선
+  const prefer = voices.filter(v =>
+    v.lang.startsWith('en') && (v.name.includes('Neural') || v.name.includes('Microsoft') || v.lang === 'en-US')
+  );
+  return prefer[0] || voices.find(v => v.lang.startsWith('en')) || null;
+}
+
+function speak(text, onEnd) {
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const voice = getEnglishVoice();
+  if (voice) utter.voice = voice;
+  utter.lang  = 'en-US';
+  utter.rate  = 0.88;
+  utter.pitch = 1;
+
+  const speakerBtn = document.getElementById('speaker-btn');
+  speakerBtn.classList.add('playing');
+  isPlaying = true;
+
+  utter.onend = () => {
+    speakerBtn.classList.remove('playing');
+    isPlaying = false;
+    if (onEnd) onEnd();
+  };
+  utter.onerror = () => {
+    speakerBtn.classList.remove('playing');
+    isPlaying = false;
+  };
+
+  currentUtterance = utter;
+  speechSynthesis.speak(utter);
+}
+
+function playAudio() {
+  if (isPlaying) return; // 재생 중 중복 클릭 방지
+
+  const sentence = sessionSentences[curQ];
+  if (!sentence) return;
+
+  if (replayLeft > 0) {
+    replayLeft--;
+    updateReplayUI();
+    speak(sentence.text);
+  } else {
+    // 재생 불가
+    const btn = document.getElementById('speaker-btn');
+    btn.classList.add('disabled');
+  }
+}
+
+function updateReplayUI() {
+  document.getElementById('replay-count').textContent = replayLeft;
+  if (replayLeft === 0) {
+    document.getElementById('speaker-btn').classList.add('disabled');
+  }
+}
+
+/* ════════════════════════════════════════════
+   QUIZ FLOW
+════════════════════════════════════════════ */
+function startQuiz() {
+  speechSynthesis.cancel();
+  sessionSentences = [];
+  sessionAnswers   = [];
+  curQ             = 0;
+  currentDiff      = 'medium';
+
+  // 첫 문장 선택
+  sessionSentences.push(pickSentence(currentDiff));
+
+  show('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const sentence = sessionSentences[curQ];
+
+  // 카운터
+  document.getElementById('q-counter').textContent = `${curQ + 1} / ${TOTAL_Q}`;
+
+  // 난이도 뱃지
+  const badge = document.getElementById('diff-badge');
+  badge.className = 'diff-badge diff-' + sentence.difficulty;
+  badge.textContent = { easy: 'EASY', medium: 'MEDIUM', hard: 'HARD' }[sentence.difficulty];
+
+  // 입력창 초기화
+  const input = document.getElementById('response-input');
+  input.value = '';
+  input.disabled = false;
+  input.focus();
+
+  // 재생 횟수 초기화
+  replayLeft = MAX_REPLAY;
+  updateReplayUI();
+  document.getElementById('speaker-btn').classList.remove('disabled');
+
+  // Next 버튼 텍스트
+  document.getElementById('btn-next').textContent = curQ === TOTAL_Q - 1 ? '제출 →' : 'NEXT →';
+
+  // 타이머 시작 & 자동 첫 재생
+  startTimer();
+  speak(sentence.text);
+}
+
+/* ── 타이머 ── */
+function startTimer() {
+  clearInterval(timerID);
+  timerSec = TIMER_SEC;
+  updateTimerUI();
+
+  timerID = setInterval(() => {
+    timerSec--;
+    updateTimerUI();
+
+    const bar = document.getElementById('q-bar');
+    bar.style.width = (timerSec / TIMER_SEC * 100) + '%';
+    bar.style.background = timerSec <= 10 ? 'var(--red)' : 'var(--orange)';
+
+    if (timerSec <= 0) {
+      clearInterval(timerID);
+      goNext(true);
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const m  = Math.floor(timerSec / 60);
+  const ss = String(timerSec % 60).padStart(2, '0');
+  const el = document.getElementById('q-timer');
+  el.textContent = `${m}:${ss}`;
+  el.classList.toggle('urgent', timerSec <= 10);
+}
+
+/* ── 다음 문제 ── */
+function goNext(timeout = false) {
+  clearInterval(timerID);
+  speechSynthesis.cancel();
+
+  const userText = document.getElementById('response-input').value.trim();
+  const sentence = sessionSentences[curQ];
+  const score    = scoreAnswer(sentence.text, userText);
+
+  sessionAnswers.push({ userText, correct: sentence.text, score, difficulty: sentence.difficulty });
+
+  // 다음 난이도 결정 & 문장 선택
+  if (curQ < TOTAL_Q - 1) {
+    currentDiff = nextDiff(score, sentence.difficulty);
+    sessionSentences.push(pickSentence(currentDiff));
+    curQ++;
+    renderQuestion();
+  } else {
+    showReview();
+  }
+}
+
+function cancelToHome() {
+  clearInterval(timerID);
+  speechSynthesis.cancel();
+  show('home');
+}
+
+/* ════════════════════════════════════════════
+   REVIEW
+════════════════════════════════════════════ */
+function showReview() {
+  show('review');
+
+  const list = document.getElementById('rv-list');
+  list.innerHTML = '';
+
+  let totalScore = 0;
+
+  sessionAnswers.forEach((ans, i) => {
+    totalScore += ans.score;
+
+    const ok = ans.score >= 70;
+    const item = document.createElement('div');
+    item.className = 'rv-item ' + (ok ? 'rv-ok' : 'rv-bad');
+
+    const diffLabel = { easy: 'EASY', medium: 'MEDIUM', hard: 'HARD' }[ans.difficulty];
+    const diffClass = 'diff-badge diff-' + ans.difficulty;
+
+    // 단어별 diff 표시
+    const diffHTML = buildDiffHTML(ans.correct, ans.userText);
+
+    item.innerHTML = `
+      <div class="rv-meta">
+        <span>Q${i + 1}</span>
+        <span class="${diffClass}" style="font-size:10px;">${diffLabel}</span>
+        <span style="margin-left:auto; font-size:12px; color:${ok ? 'var(--green)' : 'var(--red)'}; font-weight:700;">${ans.score}%</span>
+      </div>
+      <div class="rv-correct-label">정답</div>
+      <div class="rv-sentence-correct" style="margin-bottom:6px;">${escHtml(ans.correct)}</div>
+      <div class="rv-answer-label">내 답변</div>
+      <div class="rv-diff">${diffHTML}</div>
+    `;
+    list.appendChild(item);
+  });
+
+  const avg = Math.round(totalScore / sessionAnswers.length);
+  document.getElementById('rv-pct').textContent   = avg + '%';
+  document.getElementById('rv-score').textContent = `${sessionAnswers.length}문제 평균`;
+  const emoji = avg >= 80 ? '🎉' : avg >= 50 ? '💪' : '😅';
+  document.getElementById('rv-emoji').textContent = emoji + ' 결과';
+}
+
+/* 단어 단위 diff 강조 */
+function buildDiffHTML(correct, userInput) {
+  const normalize = s => s.toLowerCase().replace(/[^a-z0-9\s']/g, '').trim();
+  const cWords = normalize(correct).split(/\s+/);
+  const uWords = normalize(userInput).split(/\s+/);
+
+  if (!userInput.trim()) return '<span style="color:var(--dim);">입력 없음</span>';
+
+  const maxLen = Math.max(cWords.length, uWords.length);
+  let html = '';
+  for (let i = 0; i < maxLen; i++) {
+    const c = cWords[i];
+    const u = uWords[i];
+    if (!u) {
+      html += `<span class="word-miss">${escHtml(c)}</span> `;
+    } else if (!c) {
+      html += `<span class="word-extra">${escHtml(u)}</span> `;
+    } else if (c === u) {
+      html += `<span class="word-ok">${escHtml(u)}</span> `;
+    } else {
+      html += `<span class="word-miss">${escHtml(u)}</span> `;
+    }
+  }
+  return html.trim();
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

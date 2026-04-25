@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TTS 테스트</title>
+<style>
+  body { font-family: system-ui; max-width: 480px; margin: 40px auto; padding: 20px; }
+  h2 { margin-bottom: 4px; }
+  p.desc { color: #6B7280; font-size: 14px; margin-bottom: 20px; }
+  .sentence { background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .sentence p { margin: 0 0 10px; font-size: 16px; color: #111827; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button { padding: 8px 16px; border-radius: 8px; border: none; background: #3B82F6; color: white; font-weight: 700; cursor: pointer; font-size: 14px; }
+  button:hover { background: #2563EB; }
+  select { padding: 6px 10px; border-radius: 8px; border: 1.5px solid #E5E7EB; font-size: 13px; }
+  label { font-size: 13px; color: #374151; }
+  #voice-select-wrap { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .tag { font-size: 11px; background: #E5E7EB; border-radius: 4px; padding: 2px 6px; color: #6B7280; }
+</style>
+</head>
+<body>
+<h2>Web Speech API TTS 테스트</h2>
+<p class="desc">실제 DET Listen &amp; Type 문장들로 음질 체감해보기</p>
+
+<div id="voice-select-wrap">
+  <label>음성 선택 (en-US 위주 추천)</label>
+  <select id="voiceSelect"></select>
+  <div>
+    <label>속도: <span id="rateVal">0.85</span></label><br>
+    <input type="range" id="rateRange" min="0.5" max="1.5" step="0.05" value="0.85" style="width:200px">
+  </div>
+</div>
+
+<div class="sentence">
+  <p>① <em>난이도: 쉬움</em> <span class="tag">짧은 문장</span></p>
+  <p>"She has been waiting for the bus for over an hour."</p>
+  <div class="controls">
+    <button onclick="speak(this)">▶ 재생</button>
+  </div>
+</div>
+
+<div class="sentence">
+  <p>② <em>난이도: 보통</em> <span class="tag">연음 포함</span></p>
+  <p>"I would have gone to the party if I had known about it."</p>
+  <div class="controls">
+    <button onclick="speak(this)">▶ 재생</button>
+  </div>
+</div>
+
+<div class="sentence">
+  <p>③ <em>난이도: 어려움</em> <span class="tag">복잡한 문법</span></p>
+  <p>"The report that was submitted by the committee has not yet been reviewed by the board."</p>
+  <div class="controls">
+    <button onclick="speak(this)">▶ 재생</button>
+  </div>
+</div>
+
+<div class="sentence">
+  <p>④ <em>난이도: 어려움</em> <span class="tag">축약형/연음</span></p>
+  <p>"You've got to be kidding me — there's no way he could have finished it that quickly."</p>
+  <div class="controls">
+    <button onclick="speak(this)">▶ 재생</button>
+  </div>
+</div>
+
+<div class="sentence">
+  <p>⑤ <em>난이도: 어려움</em> <span class="tag">학술적 표현</span></p>
+  <p>"Despite the significant advancements in technology, many communities still lack access to reliable internet."</p>
+  <div class="controls">
+    <button onclick="speak(this)">▶ 재생</button>
+  </div>
+</div>
+
+<script>
+const voiceSelect = document.getElementById('voiceSelect');
+const rateRange = document.getElementById('rateRange');
+const rateVal = document.getElementById('rateVal');
+let voices = [];
+
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  voiceSelect.innerHTML = '';
+  const enVoices = voices.filter(v => v.lang.startsWith('en'));
+  enVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = voices.indexOf(v);
+    opt.textContent = `${v.name} (${v.lang})`;
+    if (v.lang === 'en-US') opt.style.fontWeight = 'bold';
+    voiceSelect.appendChild(opt);
+  });
+  // en-US 첫번째 자동 선택
+  const usIdx = enVoices.findIndex(v => v.lang === 'en-US');
+  if (usIdx >= 0) voiceSelect.selectedIndex = usIdx;
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+rateRange.addEventListener('input', () => {
+  rateVal.textContent = rateRange.value;
+});
+
+function speak(btn) {
+  speechSynthesis.cancel();
+  const card = btn.closest('.sentence');
+  const text = card.querySelectorAll('p')[1].textContent.replace(/^"/, '').replace(/"$/, '');
+  const utter = new SpeechSynthesisUtterance(text);
+  const voiceIdx = parseInt(voiceSelect.value);
+  if (voices[voiceIdx]) utter.voice = voices[voiceIdx];
+  utter.lang = 'en-US';
+  utter.rate = parseFloat(rateRange.value);
+  btn.textContent = '🔊 재생 중...';
+  utter.onend = () => btn.textContent = '▶ 재생';
+  speechSynthesis.speak(utter);
+}
+</script>
+</body>
+</html>
