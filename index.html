@@ -418,6 +418,26 @@
     }
     .btn-row { display: flex; gap: 10px; width: 100%; }
 
+    .rv-play-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-left: 6px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .rv-play-btn:active { transform: scale(0.92); background: var(--blue-d); }
+    .rv-play-btn.rv-playing { background: #1D4ED8; animation: pulse 1.2s ease-in-out infinite; }
+
     /* ── 모바일 최적화 ─────────────────────────────────────── */
     @media (max-width: 520px) {
       .big-timer  { font-size: 36px; }
@@ -1149,6 +1169,7 @@ function showReview() {
         <span>Q${i + 1}</span>
         <span class="${diffClass}" style="font-size:10px;">${diffLabel}</span>
         <span style="margin-left:auto; font-size:12px; color:${ok ? 'var(--green)' : 'var(--red)'}; font-weight:700;">${ans.score}%</span>
+        <button class="rv-play-btn" id="rv-play-${i}" onclick="replayReview(${i})" title="다시 듣기">🔊</button>
       </div>
       <div class="rv-correct-label">정답</div>
       <div class="rv-sentence-correct" style="margin-bottom:6px;">${escHtml(ans.correct)}</div>
@@ -1189,6 +1210,18 @@ function buildDiffHTML(correct, userInput) {
     }
   }
   return html.trim();
+}
+
+/* 리뷰 화면 다시 듣기 */
+function replayReview(index) {
+  // 이전에 활성화된 버튼 초기화
+  document.querySelectorAll('.rv-play-btn').forEach(b => b.classList.remove('rv-playing'));
+  const btn = document.getElementById('rv-play-' + index);
+  if (btn) btn.classList.add('rv-playing');
+
+  speak(sessionAnswers[index].correct, () => {
+    if (btn) btn.classList.remove('rv-playing');
+  });
 }
 
 function escHtml(s) {
