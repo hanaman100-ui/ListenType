@@ -1009,7 +1009,8 @@ function speak(text, onEnd) {
   };
 
   currentUtterance = utter;
-  speechSynthesis.speak(utter);
+  // cancel() 직후 바로 speak() 시 첫 단어 잘림 방지
+  setTimeout(() => speechSynthesis.speak(utter), 50);
 }
 
 function playAudio() {
