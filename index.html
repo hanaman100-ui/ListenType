@@ -978,11 +978,34 @@ function nextDiff(score, current) {
    TTS
 ════════════════════════════════════════════ */
 function getEnglishVoice() {
-  // Edge/Chrome Neural 음성 우선
-  const prefer = voices.filter(v =>
-    v.lang.startsWith('en') && (v.name.includes('Neural') || v.name.includes('Microsoft') || v.lang === 'en-US')
-  );
-  return prefer[0] || voices.find(v => v.lang.startsWith('en')) || null;
+  if (!voices.length) return null;
+
+  // 기계음 보이스 제외
+  const BAD_VOICES = /^(fred|trinoids|zarvox|whisper|cellos|bells|boing|bubbles|bad news|deranged|good news|hysterical|organ|pipe organ|princess|bahh|albert|junior|kathy|ralph)/i;
+  const pool = voices.filter(v => !BAD_VOICES.test(v.name));
+  const src = pool.length ? pool : voices;
+
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+
+  // 1순위: Microsoft en-US (Windows Edge)
+  const msUS = src.filter(v => /microsoft/i.test(v.name) && /en[-_]US/i.test(v.lang));
+  if (msUS.length) return msUS[0];
+
+  // 2순위: en-US Enhanced/Premium
+  const enhancedUS = src.filter(v => /en[-_]US/i.test(v.lang) && /(enhanced|premium)/i.test(v.name));
+  if (enhancedUS.length) return enhancedUS[0];
+
+  // 3순위: iOS면 Samantha 고정
+  if (isIOS) {
+    const samantha = src.find(v => /samantha/i.test(v.name) && /en[-_]US/i.test(v.lang));
+    if (samantha) return samantha;
+  }
+
+  // 4순위: en-US 전체
+  const anyUS = src.filter(v => /en[-_]US/i.test(v.lang));
+  if (anyUS.length) return anyUS[0];
+
+  return src.find(v => v.lang.startsWith('en')) || null;
 }
 
 function speak(text, onEnd) {
