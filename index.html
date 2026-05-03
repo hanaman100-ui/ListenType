@@ -1079,9 +1079,8 @@ function renderQuestion() {
   // Next 버튼 텍스트
   document.getElementById('btn-next').textContent = curQ === TOTAL_Q - 1 ? '제출 →' : 'NEXT →';
 
-  // 타이머 시작 & 자동 첫 재생
+  // 타이머 시작 (자동 재생 없음 - 스피커 버튼으로 시작)
   startTimer();
-  speak(sentence.text);
 }
 
 /* ── 타이머 ── */
